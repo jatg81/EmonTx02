@@ -1,0 +1,23 @@
+(---------------------------------------------------------------------)
+(                                                                     )
+(    CREATE SYMBOL                                                    )
+(                                                                     )
+(    Drawing          : USB_A.dra                                     )
+(    Software Version : 16.6-2015S059                                 )
+(    Date/Time        : Tue Nov 29 12:55:10 2016                      )
+(                                                                     )
+(---------------------------------------------------------------------)
+
+
+Create Symbol of type: PACKAGE
+    Directory = C:/Users/JATG/Desktop/EmonTx02/01_PCB/01_Libreria_Footprint
+    Name      = usb_a.psm
+    User      = JATG
+    Machine   = DESKTOP-3N8L1LV
+
+
+Create symbol started.
+ 
+
+Create symbol completed.
+

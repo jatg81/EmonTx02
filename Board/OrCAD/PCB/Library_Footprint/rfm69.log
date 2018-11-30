@@ -1,0 +1,23 @@
+(---------------------------------------------------------------------)
+(                                                                     )
+(    CREATE SYMBOL                                                    )
+(                                                                     )
+(    Drawing          : RFM69.dra                                     )
+(    Software Version : 16.6-2015S059                                 )
+(    Date/Time        : Sun Nov 06 11:45:22 2016                      )
+(                                                                     )
+(---------------------------------------------------------------------)
+
+
+Create Symbol of type: PACKAGE
+    Directory = C:/Users/JATG/Desktop/EmonTx02/01_PCB/01_Libreria_Footprint
+    Name      = rfm69.psm
+    User      = JATG
+    Machine   = DESKTOP-3N8L1LV
+
+
+Create symbol started.
+ 
+
+Create symbol completed.
+
