@@ -1,2 +1,4 @@
 # EmonTx02
-Medidor agua
+Medidor agua / monitor terma
+
+
