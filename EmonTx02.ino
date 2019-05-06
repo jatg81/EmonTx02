@@ -1,6 +1,6 @@
 /*********************************************************************************************************************************************************************************************************************/
 /* Sketch para el Emontx02                                                                                                                                                                                           */
-/* Version:  5.0                                                                                                                                                                                                     */
+/* Version:  6.0                                                                                                                                                                                                     */
 /* Created:  23/02/2017                                                                                                                                                                                              */
 /* Author:   Juan Taba Gasha                                                                                                                                                                                         */
 /* Last Rev: 01/06/2018                                                                                                                                                                                              */
@@ -15,7 +15,8 @@
 //..................................................................................................................................................
 
 #define NO_PIN_STATE                              //Para no utilizar estado de variables de la libreria PinChangeInt y disminuir el uso de memoria de programa (30 Bytes)
-#define NO_PIN_NUMBER                                
+#define NO_PIN_NUMBER  
+#include <avr/wdt.h>                              
 #include <PinChangeInt.h>
 #include <U8g2lib.h>
 #include <DHT.h>                 
@@ -74,12 +75,12 @@ volatile float flujoPulsos;
 const int nodeIdEmonPi=5;                                                                            // Id del EmonPi
 const int nodeId = 12;                                                                               // emonTx RFM12B nodo ID
 const int netGroup = 210;                                                                            // emonTx RFM12B  grupo ID
-unsigned int pirTimeOn;
+unsigned int pirTimeOn,startcounter;
 byte numPag = 0,timeInvDisplay=0,porcPresAgua,fechaMes,fechaDia,timeCountReset,txErr,buzBip,setTempMax;
 char porcTempTerma;
 bool displayInv=false,pirOn,ackRecv,StResTerma;
 volatile bool termaModo,lastStTerma,termaBotonOn,resetTot,settled = false;                                                                                                                        
-typedef struct { int dat0,dat1,dat2,dat3,dat4,dat5,dat6;byte dat7,dat8,dat9,dat10;unsigned long dat11;} PayloadTX;       
+typedef struct { int dat0,dat1,dat2,dat3,dat4,dat5,dat6,dat7;byte dat8,dat9,dat10,dat11;unsigned long dat12;} PayloadTX;       
 PayloadTX emontx; 
 typedef struct {byte dataPos,setTempMax;unsigned long setVolumenAgua,setUnixTime;} PayloadRX;       
 PayloadRX emonrx; 
@@ -94,18 +95,19 @@ void flow ()
 /*Función para enviar datos a traves del modulo RF RFM69CW*/
 void sendData ()
 {
-   emontx.dat0=flujoAgua*100;
-   emontx.dat1=tempTerma*10;
-   emontx.dat2=tempAmb*10;
-   emontx.dat3=humAmb*10;
-   emontx.dat4=presAgua*100;
-   emontx.dat5=porcTempTerma;
-   emontx.dat6=porcPresAgua;
-   emontx.dat7=pirOn;
-   emontx.dat8=lastStTerma?(termaModo? 1:2):0;                                //Estado terma = 0:apagada, 1:encencida localmente, 2:encendida remotamente
-   emontx.dat9=StResTerma;                                                    //Estado resistencia terma
-   emontx.dat10=txErr;
-   emontx.dat11=volumenAgua;
+   emontx.dat0=startcounter;
+   emontx.dat1=flujoAgua*100;
+   emontx.dat2=tempTerma*10;
+   emontx.dat3=tempAmb*10;
+   emontx.dat4=humAmb*10;
+   emontx.dat5=presAgua*100;
+   emontx.dat6=porcTempTerma;
+   emontx.dat7=porcPresAgua;
+   emontx.dat8=pirOn;
+   emontx.dat9=lastStTerma?(termaModo? 1:2):0;                                //Estado terma = 0:apagada, 1:encencida localmente, 2:encendida remotamente
+   emontx.dat10=StResTerma;                                                    //Estado resistencia terma
+   emontx.dat11=txErr;
+   emontx.dat12=volumenAgua;
    
    if(!ackRecv){                                                              //Incrementa el contador de errores de Tx cuando no se recibe ACK
     ackRev_buf|=1;
@@ -392,12 +394,24 @@ void setup() {
   rtc.readnvram((uint8_t*)&totalPulsosAguaDia, 4, 4);                        //Lee dato de volume de agua dia de la NVRAM del DS1107
   rtc.readnvram((uint8_t*)&totalPulsosAguaMes, 4, 8);                        //Lee dato de volume de agua mes de la NVRAM del DS1107
   rtc.readnvram((uint8_t*)&setTempMax, 1, 12);                               //Lee dato de seteo de temperatura maxima de la NVRAM del DS1107
+  rtc.readnvram((uint8_t*)&startcounter, 2, 13);                             //Lee dato de veces iniciado el dispositivo
+  startcounter++;
+  rtc.writenvram(13, (uint8_t*)&startcounter, 2);                            //Incrementa contador de inicios
+
   fechaDia=now.day();
   fechaMes=now.month();
+  for (int i=0;i<5;i++){                                                     //Parpadeo led en blanco cuando inicia el dispositivo
+        neopixel.setPixelColor(0,neopixel.Color(128,128,128));
+        neopixel.show();
+        delay(500);
+        neopixel.setPixelColor(0,neopixel.Color(0,0,0));
+        neopixel.show();
+        delay(500);
+    }
 }
 
 void loop() {
-  
+  wdt_enable(WDTO_500MS);
   if (!settled && millis() > FILTERSETTLETIME) {
     settled = true;
     rf69_initialize(nodeId, RF_freq, netGroup);
@@ -455,8 +469,10 @@ void loop() {
         totalPulsosAgua=0;
         totalPulsosAguaDia=0;
         totalPulsosAguaMes=0;
+        startcounter=0;
         rtc.writenvram(4, (uint8_t*)&totalPulsosAguaDia, 4);
         rtc.writenvram(8, (uint8_t*)&totalPulsosAguaMes, 4);
+        rtc.writenvram(13, (uint8_t*)&startcounter, 2); 
       }
     }
     else {
@@ -496,4 +512,5 @@ void loop() {
       rtc.writenvram(8, (uint8_t*)&totalPulsosAguaMes, 4);
     }
   }
+  wdt_reset();
 }

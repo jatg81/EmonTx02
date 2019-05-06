@@ -1,0 +1,6 @@
+{
+    "board": "Optiboot:avr:optiboot32",
+    "configuration": "mhz=16MHz,cpu=atmega328p",
+    "sketch": "EmonTx02.ino",
+    "port": "COM8"
+}
